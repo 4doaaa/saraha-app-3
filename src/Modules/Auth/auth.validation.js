@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import { generalFields } from '../../Middlewares/validation.middleware.js';
-import { genderEnum } from "../../DB/Models/user.model.js";
+import { genderEnum, roleEnum } from "../../DB/Models/user.model.js";
 
 // ==================== Joi Schema  ====================
 
@@ -30,6 +30,7 @@ export const signupSchema = {
 
         firstName: Joi.string().min(2).max(20).required(),
         lastName: Joi.string().min(2).max(20).required(),
+        role: Joi.string().valid("USER", "ADMIN").default(roleEnum.USER),
     })
 };
 

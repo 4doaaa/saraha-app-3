@@ -7,6 +7,11 @@ export const providerEnum = {
     SYSTEM:"SYSTEM",
     GOOGLE:"GOOGLE",
 };
+
+export const roleEnum = {
+    USER:"USER",
+    ADMIN:"ADMIN",
+};
 const userSchema = new mongoose.Schema({
     firstName: {
         type:String,
@@ -45,12 +50,33 @@ const userSchema = new mongoose.Schema({
         },
         default:providerEnum.SYSTEM,
     },
-   confirmEmail: {
-        type: Boolean,
-        default: false          // أهم حاجة!
+  
+
+    
+role:{
+        type:String,
+        enum:{
+            values: Object.values(roleEnum), //["Male" , "Female"],
+            message:"{VALUE} is not valid role",
+        },
+        default:roleEnum.USER,
     },
-    confirmedAt: {              // لو عايز تسجل تاريخ التأكيد (اختياري)
-        type: Date,
+  
+
+
+    profileImage:String,
+    coverImages:[String],
+   
+    cloudProfileImage:{public_id:String ,secure_url:String},
+    cloudcoverImages:[{public_id:String ,secure_url:String}],
+
+    confirmEmail: {
+        type: Boolean,
+        default: false          
+    },
+    freezedAt: Date,
+    freezedBy:{type:mongoose.Schema.Types.ObjectId , ref:"User"},
+    confirmedAt: {            
     },
     confirmEmailOTP: String,
     confirmEmailOTPExpires: Date,

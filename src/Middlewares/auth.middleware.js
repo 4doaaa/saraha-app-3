@@ -1,45 +1,65 @@
 
-
 import * as dbService from  "../DB/dbService.js" 
 import TokenModel from "../DB/Models/token.model.js";
 import UserModel from "../DB/Models/user.model.js";
 import { verifyToken } from "../Utils/tokens/token.utils.js";
 
-export const authentication = async (req , res , next) =>{
-    const {authorization} = req.headers;
-  
-    if (!authorization) {
-            return next(new Error("Authorization token is missing", { cause: 400 }));
-        }
- 
- if (!authorization.startsWith(process.env.TOKEN_PREFIX)) {
-            return next(new Error("Invalid Authorization Format ", { cause: 400 }));
-        }
-const token = authorization.split(" ")[1];
+export const tokenTypeEnum = {
+    ACCESS: "ACCESS",
+    REFRESH: "REFRESH",
+};
+
+const  decodedToken = async ({authorization , tokenType = tokenTypeEnum.ACCESS , next}={}) => {
+    const [Bearer , token] = authorization.split(" ")||[];
+if (Bearer !== 'Bearer' || !token) 
+    return next(new Error("Invalid Token", {cause:400}));
+    let signatures = await getSignature({signatureLevel: Bearer});
+    
     const decoded = verifyToken({
-        token: token, 
-        secretkey: process.env.TOKEN_ACCESS_SECRET
+        token,
+        secretkey: tokenType === tokenTypeEnum.ACCESS ? signatures.accessSignature : signatures.refreshSignature,
     });
-
-
-if (!decoded?.id || !decoded?.jti) {
-return next(new Error("Invalid token: missing id or jti", { cause: 401 }));        }
-           const revokedToken = await dbService.findOne({
+    if(!decoded.jti)
+        return next(new Error("Invalid Token", {cause:401}));
+       const revokedToken = await dbService.findOne({
             model:TokenModel,
            filter:{jwtid:decoded.jti},
            });
            if (revokedToken)
                 return next(new Error(" token is revoked", {cause:401}));
 
-           //find user
+             //find user
            const user = await dbService.findById({
             model: UserModel,
             id: decoded.id       
         });
          if (!user)          
-           return next(new Error(" user not found", {cause:404}));     
-       
-       req.user = user;
-req.decoded = decoded;
-         next();
+           return next(new Error("Not Registered Account", {cause:404}));  
+        return { user , decoded } ;
+};
+
+
+export const authentication = ({tokenType = tokenTypeEnum.ACCESS} = {}) => {
+    return async (req, res, next) => {
+        const result = await decodedToken({
+            authorization: req.headers.authorization,
+            tokenType,
+            next
+        });
+
+        if (!result || !result.user) {
+            return next(new Error("Invalid or expired token", { cause: 401 }));
+        }
+        req.user = result.user;
+        req.decoded = result.decoded;
+        return next(); 
+    };
+};
+export const authorization = ({accessRoles = []} = {}) => {
+    return (req, res, next) => {
+        if (!req.user || !accessRoles.includes(req.user?.role)) {
+            return next(new Error("Unauthorized Access", { cause: 403 }));
+        }
+        return next();
+    };
 };

@@ -5,15 +5,13 @@ import * as dbService from "../../DB/dbService.js";
 import { asymmetricEncrypt, encrypt } from "../../Utils/Encryption/encryption.utils.js";
 //import { encrypt } from "../../Utils/Encryption/encryption.utils.js";
 import bcrypt, { compare } from 'bcrypt';
-import { emailSubject, sendEmail } from "../../Utils/Emails/email.utils.js";
 import { emailEvents } from "../../Utils/Events/email.event.utils.js";
 import { customAlphabet } from "nanoid";
-import { generateToken, verifyToken } from "../../Utils/tokens/token.utils.js";
+import { generateToken ,getNewLoginCredintials, verifyToken } from "../../Utils/tokens/token.utils.js";
 import {v4 as uuid} from "uuid";
 import { signupSchema } from "../../Middlewares/validation.middleware.js"; 
 import nodemailer from "nodemailer";
 import { OAuth2Client } from 'google-auth-library';
-import { model } from "mongoose";
 
 // Nodemailer transporter
 const transporter = nodemailer.createTransport({
@@ -110,29 +108,12 @@ export const login = async (req , res , next)=>{
 if (!(await bcrypt.compare(password, checkUser.password))) { 
         return next(new Error("Invalid Email Or Password" , {cause: 400}));  
     }
-const accessToken =  generateToken({
-    payload: { id: checkUser._id, email: checkUser.email },
-    secretkey: process.env.TOKEN_ACCESS_SECRET,
-    options: {
-        expiresIn:parseInt(process.env.ACCESS_TOKEN_EXPIRES_IN),
-        jwtid: uuid(),
-    },
-});
-
-
-const refreshToken =  generateToken({
-    payload: { id: checkUser._id, email: checkUser.email },
-    secretkey:process.env.REFRESH_TOKEN_SECRET,
-    options: {
-        expiresIn:parseInt(process.env.REFRESH_TOKEN_EXPIRES_IN),
-        jwtid: uuid(),
-    },
-});
+const credentials = await getNewLoginCredintials(checkUser);
 return successResponse({
     res,
     statuscode: 200,
     message: "User loggedIn Successfuly",
-    data: { accessToken, refreshToken },
+    data: {credentials},
 });
 };
 
@@ -205,27 +186,15 @@ export const logOut = async (req , res , next)=>{
 
 // ==================== refreshToken ====================
 export const refreshToken = async (req , res , next)=>{
- 
- const {refreshtoken} =req.headers; 
-const decoded = verifyToken({ 
-  token:refreshtoken,
-  secretkey:process.env.REFRESH_TOKEN_SECRET,
-});
+ const user = req.body;
 
-const accessToken =  generateToken({
-    payload: { id: decoded.id, email: decoded.email },
-    secretkey: process.env.TOKEN_ACCESS_SECRET,
-    options: {
-        expiresIn:parseInt(process.env.ACCESS_TOKEN_EXPIRES_IN),
-        jwtid: uuid(),
-    },
-});
+const credentials = await getNewLoginCredintials(user);
 
    return successResponse({
     res,
     statuscode: 200,
     message: "Token Refreshed successfully",
-    data: {accessToken},
+    data: {credentials},
   });
 };
 
