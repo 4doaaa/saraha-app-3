@@ -1,6 +1,11 @@
+// ==================== Module Imports & Dependencies ====================
+
 import Joi from "joi";
 import { genderEnum } from "../DB/Models/user.model.js";
 import { Types } from "mongoose";
+
+
+// ==================== General Reusable Validation Fields ====================
 
 export const generalFields = {
     email: Joi.string().email().required(),
@@ -16,6 +21,9 @@ export const generalFields = {
         .required()
         .messages({ "any.only": "Confirm password does not match password" }),
 };
+
+
+// ==================== Global Validation Middleware (Joi Schema Runner) ====================
 
 export const Validation = (schema) => {
     return (req, res, next) => {
@@ -47,6 +55,9 @@ export const Validation = (schema) => {
         return next();
     };
 };
+
+
+// ==================== Signup Request Body Validation Schema ====================
 
 export const signupSchema = {
     body: Joi.object({
@@ -105,7 +116,8 @@ export const signupSchema = {
         }),
     }),
 
-    // File fields (لما برفع ملف مع الـ signup مثلاً profile picture)
+    // ==================== File Upload Validation (e.g., Profile Picture in Signup) ====================
+
     file: Joi.object({
         fieldname: Joi.string(),
         originalname: Joi.string(),
@@ -118,6 +130,9 @@ export const signupSchema = {
     }).optional(),
 };
 
+
+// ==================== Profile Image Upload Validation Schema ====================
+
 export const profileImageSchema = {
     file: Joi.object({
         size: Joi.number().positive().max(5 * 1024 * 1024).required(), // Optional: max 5MB
@@ -128,6 +143,9 @@ export const profileImageSchema = {
         fieldname: Joi.string().valid("profileImage").required(),
     }).unknown(true).required()
 };
+
+
+// ==================== Cover Images Upload Validation Schema (Multiple Files) ====================
 
 export const coverImagesSchema = {
     files: Joi.array().items(

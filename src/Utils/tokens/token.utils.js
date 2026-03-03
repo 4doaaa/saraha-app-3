@@ -1,11 +1,19 @@
+// ==================== Module Imports & Dependencies ====================
+
 import jwt from "jsonwebtoken";
 import { roleEnum } from "../../DB/Models/user.model.js";
 import {v4 as uuid} from "uuid";
+
+
+// ==================== Signature Level Enum Definition ====================
 
 export const getSignatureEnum = {
     ADMIN: "ADMIN",
     USER: "USER",
 }
+
+
+// ==================== Generate JWT Token Function ====================
 
 export const generateToken = ({payload , 
     secretkey=process.env.TOKEN_ACCESS_SECRET
@@ -14,12 +22,17 @@ export const generateToken = ({payload ,
     return jwt.sign(payload , secretkey , options );
 };
 
+
+// ==================== Verify JWT Token Function ====================
+
 export const verifyToken = ({token , secretkey=process.env.TOKEN_ACCESS_SECRET,
     
  }) =>{
     return jwt.verify(token , secretkey );
 };
 
+
+// ==================== Get Signature Secrets Based on User Level ====================
 
 export const getSignature = async ({signatureLevel = getSignatureEnum.USER})=>{
     let signatures = {accessSignature: undefined , refreshSignature: undefined};
@@ -39,6 +52,8 @@ export const getSignature = async ({signatureLevel = getSignatureEnum.USER})=>{
     return signatures;
 };
 
+
+// ==================== Generate New Access & Refresh Tokens for Login ====================
 
 export const getNewLoginCredintials = async(user) =>{
     const signatures = await getSignature({

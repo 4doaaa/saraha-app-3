@@ -1,23 +1,35 @@
+// ==================== Module Imports & Dependencies ====================
+
 import crypto from "node:crypto";
 import fs from "fs";
+
+
+// ==================== Encryption Constants ====================
+
 const ENCRYPTION_SECERT_KEY = Buffer.from("12343567891234567891233456789012", 'utf8');
 const IV_LENGTH = +process.env.IV_LENGTH; //FOR AES , THIS IS ALWAYES 16
+
+
+// ==================== Symmetric Encryption (AES-256-CBC) ====================
 
 //encrypt
 export const encrypt = (plaintext) => {
 
-const iv = crypto.randomBytes(IV_LENGTH);
+    const iv = crypto.randomBytes(IV_LENGTH);
 
-const cipher = crypto.createCipheriv("aes-256-cbc" , 
-ENCRYPTION_SECERT_KEY,
-iv
-    );
-    let encrypted = cipher.update(plaintext , "utf-8" ,"hex");
-    encrypted += cipher.final("hex");
-     
-    return iv.toString("hex")+ ":" + encrypted;
+    const cipher = crypto.createCipheriv("aes-256-cbc" , 
+    ENCRYPTION_SECERT_KEY,
+    iv
+        );
+        let encrypted = cipher.update(plaintext , "utf-8" ,"hex");
+        encrypted += cipher.final("hex");
+         
+        return iv.toString("hex")+ ":" + encrypted;
 
 };
+
+
+// ==================== Symmetric Decryption (AES-256-CBC) ====================
 
 //decrypt
 export const decrypt = (encryptedData) => {
@@ -32,13 +44,10 @@ export const decrypt = (encryptedData) => {
     decrypted += decipher.final("utf8");
      
     return decrypted;
-
-
 };
 
-//1- create encryption
-//2- update encrypt 
-//3- final encryption 
+
+// ==================== Asymmetric Key Pair Generation (RSA 2048) ====================
 
 // Asymmetric
 if(fs.existsSync("public_key.pem") && fs.existsSync("private_key.pem")){
@@ -56,6 +65,10 @@ fs.writeFileSync("public_key.pem" , publicKey);
 fs.writeFileSync("private_key.pem" ,  privateKey);
 
 }
+
+
+// ==================== Asymmetric Encryption (RSA Public Key) ====================
+
 ///encript
 export const asymmetricEncrypt = (plaintext) => {
     const bufferedText = Buffer.from(plaintext, "utf8");
@@ -68,6 +81,10 @@ bufferedText
     );
 return encryptedData.toString("hex");
 };
+
+
+// ==================== Asymmetric Decryption (RSA Private Key) ====================
+
 ///decript
 export const asymmetricDecript = (cipherText) => {
     const bufferedCipherText = Buffer.from(cipherText, "hex");
@@ -78,5 +95,5 @@ export const asymmetricDecript = (cipherText) => {
 },
 bufferedCipherText
     );
-return encryptedData.toString("utf8");
+return decryptedData.toString("utf8");
 };

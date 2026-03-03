@@ -1,5 +1,4 @@
-// repository Design Pattern for DB Operations
-
+// ==================== findOne – Retrieve Single Document ====================
 
 export const findOne = async({
     model , 
@@ -11,7 +10,9 @@ return await model.findOne(filter).select(select).populate(populate);
     };
 
 
-    export const find = async({
+// ==================== find – Retrieve Multiple Documents ====================
+
+export const find = async({
     model , 
     filter = {} ,
      select = "" ,
@@ -21,16 +22,21 @@ return await model.find(filter).select(select).populate(populate);
     };
 
 
-        export const findById = async({
+// ==================== findById – Retrieve Document by _id ====================
+
+export const findById = async({
     model , 
     id = "" ,
      select = "" ,
       populate = [],
     } = {}) => {
-return await model.findById(id).select(select).populate(populate);    };
+return await model.findById(id).select(select).populate(populate);    
+};
 
 
-        export const create = async({
+// ==================== create – Insert One or Many Documents ====================
+
+export const create = async({
     model , 
     data = [{}],
     options ={validateBeforeSave : true},
@@ -39,7 +45,9 @@ return await model.create(data , options);
     };
 
 
-          export const updateOne = async({
+// ==================== updateOne – Update First Matching Document ====================
+
+export const updateOne = async({
     model , 
     filter = {},
     data = {},
@@ -49,8 +57,9 @@ return await model.updateOne(filter, data , options);
     };
 
 
+// ==================== findByIdAndUpdate – Find by _id & Update ====================
 
-    export const findByIdAndUpdate = async({
+export const findByIdAndUpdate = async({
     model , 
     id = "",
     data = {},
@@ -60,8 +69,9 @@ return await model.findByIdAndUpdate(id, data , options);
     };
 
 
+// ==================== findOneAndUpdate – Find One & Update ====================
 
-    export const findOneAndUpdate = async({
+export const findOneAndUpdate = async({
     model , 
     filter = {},
     data = {},
